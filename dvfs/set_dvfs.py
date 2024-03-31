@@ -119,12 +119,4 @@ def setDVFS(conf):
 
 
 if __name__ == "__main__":
-	# t0 = time.time()
-	# setDVFS([652800, 1198500000, 800000000])
-	# t1 = time.time()
-	# print(t1 - t0)
-	# setDVFS([2201600,114750000, 2133000000])
-	# t2 = time.time()
-	# print(t2 - t1)
-
-	setDVFS([652800,114750000, 2133000000])
+	setDVFS([2265600, 1377000000, 2133000000])
