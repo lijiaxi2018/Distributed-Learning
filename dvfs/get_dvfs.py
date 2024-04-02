@@ -16,6 +16,30 @@ def getcurStatus():
 
 	return cpuFreq, gpuFreq, emcFreq
 
+def getCpuStatus():
+	"""Get current system knob status, including cpu freqs
+	as well as the hotplug status of the Denver cores"""
+	
+	cpuFreq_fname = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+
+	cpuFreq = None
+	with open(cpuFreq_fname, 'r') as f:
+		cpuFreq = int(f.read().strip('\n'))
+
+	return cpuFreq
+
+def getEmcStatus():
+	"""Get current system knob status, including memory freqs
+	as well as the hotplug status of the Denver cores"""
+	
+	emcFreq_fname = "/sys/kernel/debug/bpmp/debug/clk/emc/rate"
+
+	emcFreq = None
+	with open(emcFreq_fname, 'r') as f:
+		emcFreq = int(f.read().strip('\n'))
+
+	return emcFreq
+
 if __name__ == "__main__":
-	cpuFreq_cur, gpuFreq_cur, emcFreq_cur = getcurStatus()
-	print("Current Frequency", cpuFreq_cur, gpuFreq_cur, emcFreq_cur)
+	cpuFreq = getCpuStatus()
+	print("Current CPU Frequency", cpuFreq)

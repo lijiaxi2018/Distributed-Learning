@@ -2,9 +2,9 @@ import threading
 import time
 
 agx_orin_nodes = [
-    ('module/gpu', '0040', '3', '1'),
-    ('module/cpu', '0040', '3', '2'),
-    ('module/ddr', '0041', '4', '2'),
+    ('module/gpu', '0040', '0', '1'),
+    ('module/cpu', '0040', '0', '2'),
+    ('module/ddr', '0041', '1', '2'),
 ]
 
 def readValue(i2cAddr='0041', index='3', channel='1'):
