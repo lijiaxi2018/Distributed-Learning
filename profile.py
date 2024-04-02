@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import power.AGXPowerLogger as APL
+from task.ds import run_deepsparse  
 
 def intensive_computation(size=1000, iterations=10):
     # Generate two large matrices with random values
@@ -20,7 +21,7 @@ logger = APL.AGXPowerLogger()
 logger.start()
 t0 = time.perf_counter()
 
-intensive_computation()
+run_deepsparse("zoo:llama2-7b-gsm8k_llama2_pretrain-base_quantized")
 
 t1 = time.perf_counter()
 logger.stop()

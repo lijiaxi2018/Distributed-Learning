@@ -117,6 +117,51 @@ def setDVFS(conf):
 
 	print("Current Frequency", cpuFreq_cur, gpuFreq_cur, emcFreq_cur)
 
+def getCpuStatus():
+	"""Get current system knob status, including cpu freqs
+	as well as the hotplug status of the Denver cores"""
+	
+	cpuFreq_fname = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"
+
+	cpuFreq = None
+	with open(cpuFreq_fname, 'r') as f:
+		cpuFreq = int(f.read().strip('\n'))
+
+	return cpuFreq
+
+def setCpu(cpuFreq):
+	"""Set the system knobs, which include DVFS setting on cpu, as well as CPU hotplug based on the given parameters"""
+	cpuFreq_cur = getCpuStatus()
+	
+	# setCpuOnline()
+	if cpuFreq != cpuFreq_cur:
+		setCpuFreq(cpuFreq, cpuFreq_cur)
+
+	print("Current CPU Frequency", cpuFreq_cur)
+
+def getEmcStatus():
+	"""Get current system knob status, including memory freqs
+	as well as the hotplug status of the Denver cores"""
+	
+	emcFreq_fname = "/sys/kernel/debug/bpmp/debug/clk/emc/rate"
+
+	emcFreq = None
+	with open(emcFreq_fname, 'r') as f:
+		emcFreq = int(f.read().strip('\n'))
+
+	return emcFreq
+
+def setEmc(emcFreq):
+	"""Set the system knobs, which include DVFS setting on
+	emc, as well as CPU hotplug based on the given parameters"""
+	emcFreq_cur = getEmcStatus()
+	
+	# setCpuOnline()
+	if emcFreq != emcFreq_cur:
+		setEmcFreq(emcFreq, emcFreq_cur)
+
+	print("Current EMC Frequency", emcFreq_cur)
+
 
 if __name__ == "__main__":
-	setDVFS([2265600, 1377000000, 2133000000])
+	setCpu(2201600)
