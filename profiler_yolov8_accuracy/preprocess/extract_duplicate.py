@@ -39,7 +39,7 @@ def extract_and_duplicate_frames(input_folder, output_folder, fps_target):
                 # Save the frame if it is the sampled frame or duplicate the last sampled frame
                 if frame_number % frame_interval == 0 or last_sampled_frame is not None:
                     # Define the output frame file path
-                    frame_path = os.path.join(output_folder, f"{base_name}_frame{frame_number + 1}.jpg")
+                    frame_path = os.path.join(output_folder, f"{base_name}_frame{frame_number + 1:05d}.jpg")
                     # If current frame is sampled, update last_sampled_frame
                     if frame_number % frame_interval == 0:
                         last_sampled_frame = frame

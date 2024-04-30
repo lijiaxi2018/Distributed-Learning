@@ -38,7 +38,7 @@ def extract_frames_by_fps(input_folder, output_folder, fps_target):
                 # Only save frames according to the specified fps
                 if frame_number % frame_interval == 0:
                     # Define the output frame file path
-                    frame_path = os.path.join(output_folder, f"{base_name}_frame{frame_number + 1}.jpg")
+                    frame_path = os.path.join(output_folder, f"{base_name}_frame{frame_number + 1:05d}.jpg")
                     # Save the frame
                     cv2.imwrite(frame_path, frame)
 

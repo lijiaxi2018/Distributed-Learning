@@ -11,6 +11,7 @@ def extract_frames_from_videos(input_folder, output_folder):
     filenames = sorted(os.listdir(input_folder))
     
     # Process each file
+    frames_per_clip = []
     for filename in filenames:
         video_path = os.path.join(input_folder, filename)
         if os.path.isfile(video_path) and filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
@@ -30,7 +31,7 @@ def extract_frames_from_videos(input_folder, output_folder):
                     break  # End of video if no frame is returned
 
                 # Define the output frame file path
-                frame_path = os.path.join(output_folder, f"{base_name}_frame{frame_number}.jpg")
+                frame_path = os.path.join(output_folder, f"{base_name}_frame{frame_number:05d}.jpg")
                 
                 # Save the frame
                 cv2.imwrite(frame_path, frame)
@@ -39,6 +40,9 @@ def extract_frames_from_videos(input_folder, output_folder):
             # Release the video capture object
             video.release()
             print(f"Extracted {frame_number - 1} frames from video {filename}")
+            frames_per_clip.append(frame_number - 1)
+    
+    return frames_per_clip
 
 if __name__ == "__main__":
     extract_frames_from_videos(sys.argv[1], sys.argv[2])
