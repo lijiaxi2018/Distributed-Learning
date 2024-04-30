@@ -9,7 +9,7 @@ from metric.metric_yyy import metric
 from metric.metric_clip import metric_clip
 from metric.metric_video import metric_video
 
-INTERVALS = [5]
+INTERVALS = [15]
 FPSS = [1, 2, 3, 5, 10, 15, 30]
 IMAGE_WIDTH = 1280
 DETECT_WIDTH = 960
