@@ -7,8 +7,10 @@ def split_all_videos_into_clips(input_folder, output_folder, interval):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
+    filenames = sorted(os.listdir(input_folder))
+    clips_per_video = []
     # Iterate through each file in the input folder
-    for filename in os.listdir(input_folder):
+    for filename in filenames:
         video_path = os.path.join(input_folder, filename)
         if os.path.isfile(video_path) and filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
             # Get the base name of the video file without the extension
@@ -46,7 +48,7 @@ def split_all_videos_into_clips(input_folder, output_folder, interval):
                         out.release()  # Close the previous video writer object
 
                     # Define the output video file path
-                    output_path = os.path.join(output_folder, f'{base_name}_clip{clip_number}.mp4')
+                    output_path = os.path.join(output_folder, f'{base_name}_clip{clip_number:05d}.mp4')
                     out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (int(video.get(3)), int(video.get(4))))
                     clip_number += 1
 
@@ -60,6 +62,9 @@ def split_all_videos_into_clips(input_folder, output_folder, interval):
                 out.release()
 
             print(f"Video {filename} split into {clip_number - 1} clips without saving the remainder.")
+            clips_per_video.append(clip_number - 1)
+    
+    return filenames, clips_per_video
 
 if __name__ == "__main__":
     split_all_videos_into_clips(sys.argv[1], sys.argv[2], int(sys.argv[3]))
