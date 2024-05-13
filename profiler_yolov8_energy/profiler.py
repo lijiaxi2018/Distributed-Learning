@@ -10,7 +10,7 @@ import time
 import power.AGXPowerLogger as APL
 from dvfs.lib import setCpu, setGpu, getCpuStatus, getGpuStatus
 
-CONFIG_NAME = "YOLOv8-1800-960x640"
+CONFIG_NAME = "YOLOv8-1800-640"
 CPU_CONFIGS = [
     115200, 
     192000, 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
             logger.start()
             t0 = time.perf_counter()
 
-            detect_yolov8()
+            detect_yolov8(image_width=640)
 
             t1 = time.perf_counter()
             logger.stop()
