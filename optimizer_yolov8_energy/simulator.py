@@ -1,6 +1,20 @@
 import json
 import numpy as np
-from DVFSController import DVFSController 
+from DVFSControllerV2 import DVFSControllerV2
+
+def cap_list(int_list, min_value, max_value):
+    """
+    Caps each element in the int_list to be within the specified min_value and max_value.
+
+    Args:
+    int_list (list of int): The list of integers to be capped.
+    min_value (int): The minimum value to cap the integers.
+    max_value (int): The maximum value to cap the integers.
+
+    Returns:
+    list of int: A new list with each element capped between min_value and max_value.
+    """
+    return [max(min_value, min(x, max_value)) for x in int_list]
 
 def interpolate_2d_array(arr, new_shape):
     """
@@ -39,6 +53,8 @@ def evaluate_controller(selected_frequencies, energy_result, efficient_power_res
     output_throughput_surplus_list = []
     output_throughput_shortage_list = []
     output_throughput_diff_list = []
+    output_power_list = []
+    efficient_power_list = []
 
     for i, freq_tuple in enumerate(selected_frequencies):
         key = f"{freq_tuple[0]}:{freq_tuple[1]}"
@@ -58,9 +74,12 @@ def evaluate_controller(selected_frequencies, energy_result, efficient_power_res
         output_throughput_list.append(output_throughput)
         power_overuse_rate_list.append( (output_power - efficient_power) / (0.5 * (output_power + efficient_power)) )
 
+        output_power_list.append(output_power)
+        efficient_power_list.append(efficient_power)
+
     time = list(np.array(range(len(REQUIRED_THROUGHPUT))) * RESAMPLING_INTERVAL * 1.)
 
-    return time, power_overuse_rate_list, output_throughput_list, output_throughput_surplus_list, output_throughput_shortage_list, output_throughput_diff_list
+    return time, power_overuse_rate_list, output_throughput_list, output_throughput_surplus_list, output_throughput_shortage_list, output_throughput_diff_list, output_power_list, efficient_power_list
 
 def load_json(filepath):
     with open(filepath, 'r') as file:
@@ -88,6 +107,8 @@ GPU_FREQ = [
 
 COMBINED_FPS_PATH = "../assets/result/accuracy/Combined-FPS.json"
 REQUIRED_THROUGHPUT = load_json(COMBINED_FPS_PATH)
+REQUIRED_THROUGHPUT = REQUIRED_THROUGHPUT * 2
+REQUIRED_THROUGHPUT = cap_list(REQUIRED_THROUGHPUT, 1, 23)
 
 STANDARD_EFFICIENCY_TABLE_PATH = '../assets/result/optimizer_energy/Standard-Efficiency-Table.json'
 STANDARD_EFFICIENCY_TABLE = load_json(STANDARD_EFFICIENCY_TABLE_PATH)
@@ -108,29 +129,36 @@ def evaluate_throughput(cpu_freq, gpu_freq, result_dict=ENERGY_RESULT):
 
 # Simulation
 if __name__ == "__main__":
-    controller = DVFSController(w=0.375, GPU_FREQ=GPU_FREQ, CPU_FREQ=CPU_FREQ, efficiency_array=real_efficiency_table)
+    controller = DVFSControllerV2(efficiency_desc_rate=0.05, exploration_desc_rate=0.01, suggest_randomness=1, GPU_FREQ=GPU_FREQ, CPU_FREQ=CPU_FREQ, efficiency_array=real_efficiency_table)
 
     selected_frequencies = []
     for required_throughput in REQUIRED_THROUGHPUT:
         cpu_freq, gpu_freq = controller.suggest_combination(required_throughput)
         selected_frequencies.append((cpu_freq, gpu_freq))
         real_throughput = evaluate_throughput(cpu_freq, gpu_freq)
-        controller.update_model(cpu_freq, gpu_freq, real_throughput)
+        real_power = evaluate_power(cpu_freq, gpu_freq)
+        controller.update_model(cpu_freq, gpu_freq, real_throughput, real_power)
 
     suggestion_latency = controller.get_suggestion_latency()
     update_latency = controller.get_update_latency()
+    total_latency = list(np.array(suggestion_latency) + np.array(update_latency))
         
     # Evaluation
     EFFICIENT_POWER_RESULT_PATH = '../assets/result/energy/Dict-Per-Real-Second-960.json'
     EFFICIENT_POWER_RESULT = load_json(EFFICIENT_POWER_RESULT_PATH)
 
-    _, power_overuse_rate_list, _, output_throughput_surplus_list, output_throughput_shortage_list, _ = evaluate_controller(selected_frequencies, ENERGY_RESULT, EFFICIENT_POWER_RESULT, NUM_FRAME)
+    _, power_overuse_rate_list, _, output_throughput_surplus_list, output_throughput_shortage_list, _, output_power_list, efficient_power_list = evaluate_controller(selected_frequencies, ENERGY_RESULT, EFFICIENT_POWER_RESULT, NUM_FRAME)
 
-    print(f"Average Power Overuse Rate: {np.average(np.array(power_overuse_rate_list))}")
-    print(f"Average Throughput Surplus Rate: {np.average(np.array(output_throughput_surplus_list))}")
-    print(f"Average Throughput Shortage Rate: {np.average(np.array(output_throughput_shortage_list))}")
-    print(f"Average Suggestion Latency: {np.average(np.array(suggestion_latency))}")
-    print(f"Average Update Latency: {np.average(np.array(update_latency))}")
+    # print(f"Average Throughput Surplus Rate: {np.average(np.array(output_throughput_surplus_list))}")
+    # print(f"Average Throughput Shortage Rate: {np.average(np.array(output_throughput_shortage_list))}")
+
+    throughput_miss_rate = len([x for x in output_throughput_shortage_list if x > 0.]) / len(total_latency)
+    extra_power_percentage = np.sum(output_power_list) / np.sum(efficient_power_list) - 1
+    controller_latency = np.average(np.array(total_latency))
+
+    print(f"Throughput Miss Rate: {round(throughput_miss_rate * 100, 4)}%")
+    print(f"Extra Power Percentage: {round(extra_power_percentage * 100, 4)}%")
+    print(f"Average Latency: {(round(controller_latency, 4))}")
 
     # Output
     selected_frequencies = [(int(x), int(y)) for x, y in selected_frequencies]
