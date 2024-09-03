@@ -22,8 +22,6 @@ import sys
 import numpy as np
 from shapely.geometry import Polygon
 
-CLASSES = ['People']
-
 IMAGE_ENDINGS = (".png", ".jpg", ".jpeg")
 def getAllImages(path):
     images_filenames = []
@@ -120,7 +118,11 @@ def single_image_confusion_matrix(bb_real_8, bb_pred_8, class_idx, iou_threshold
 
     return tp, real_p, pred_p
         
-def metric(image_directory, real_directory, pred_directory, results_path, threshold=0.5, class_indexes=[2]):
+def metric(image_directory, working_folder, interval, fps, threshold=0.5, class_indexes=[2]):
+    real_directory = os.path.join(working_folder, f"Label_GT_I{interval}")
+    pred_directory = os.path.join(working_folder, f"Label_Dup_I{interval}_F{fps}")
+    results_path = os.path.join(working_folder, f"Label_Dup_I{interval}_F{fps}.json")
+
     results = {}
     image_filenames = getAllImages(image_directory)
     image_filenames = sorted(image_filenames)
@@ -132,9 +134,9 @@ def metric(image_directory, real_directory, pred_directory, results_path, thresh
         for image_filename in image_filenames:
             print('Processing: ' + image_filename)
 
-            image_path = image_directory + '\\' + image_filename
-            bb_real_path = real_directory + '\\' + image_filename[0 : image_filename.index('.')] + '.txt'
-            bb_pred_path = pred_directory + '\\' + image_filename[0 : image_filename.index('.')] + '.txt'
+            image_path = os.path.join(image_directory, image_filename)
+            bb_real_path = os.path.join(real_directory, image_filename[0 : image_filename.index('.')] + '.txt')
+            bb_pred_path = os.path.join(pred_directory, image_filename[0 : image_filename.index('.')] + '.txt')
 
             src = cv2.imread(image_path)
             sphereH, sphereW, _ = map(int, src.shape)
@@ -156,34 +158,6 @@ def metric(image_directory, real_directory, pred_directory, results_path, thresh
         class_result["RP"] = real_ps
         class_result["PP"] = pred_ps
 
-        print(f"CLASS_IDX: {class_idx}")
-        tp_sum = np.sum(np.array(tps))
-        real_p_sum = np.sum(np.array(real_ps))
-        pred_p_sum = np.sum(np.array(pred_ps))
-
-        if pred_p_sum == 0:
-            print('Precision: Divided by 0')
-            class_result["Precision"] = -1
-        else:
-            print('Precision: ' + str(tp_sum) + '/' + str(pred_p_sum) + '=' + str(tp_sum / pred_p_sum))
-            class_result["Precision"] = tp_sum / pred_p_sum
-        
-        if real_p_sum == 0:
-            print('Recall: Divided by 0')
-            class_result["Recall"] = -1
-        else:
-            print('Recall: ' + str(tp_sum) + '/' + str(real_p_sum) + '=' + str(tp_sum / real_p_sum) )
-            class_result["Recall"] = tp_sum / real_p_sum
-        
-        if pred_p_sum != 0 and real_p_sum != 0:
-            pr = tp_sum / pred_p_sum
-            re = tp_sum / real_p_sum
-            print('F1 Score: ' + str( 2 / ( (1 / pr) + (1 / re) ) ) )
-            class_result["F1"] = 2 / ( (1 / pr) + (1 / re) )
-        else:
-            print('Either Precision or Recall: Divided by 0')
-            class_result["F1"] = -1
-        
         results[class_idx] = class_result
         
     with open(results_path, 'w') as file:
