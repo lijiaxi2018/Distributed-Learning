@@ -1,54 +1,44 @@
-import torch
+import json
+import time
 from PIL import Image
 from torchvision import transforms
-import time
-
-# Define the transformation (resizing and normalization as per YOLOv8 input requirement)
-transform = transforms.Compose([
-    transforms.Resize((640, 640)),   # YOLOv8 typically uses 640x640 images
-    transforms.ToTensor()            # Convert image to PyTorch tensor
-])
-
-# Load the image
-img = Image.open("0.jpg")
-
-# Apply the transformations
-img_tensor = transform(img).unsqueeze(0)  # Add a batch dimension
-
-# Move tensor to GPU
-img_tensor = img_tensor.to("cuda")
-
 from ultralytics import YOLO
 
-model_path="\\Users\\ljx\\Documents\\Study\\cs525\\Assets\\models\\yolov8n.pt"
-# Load the YOLOv8 model (assuming it's a model file or pretrained one)
+OUTPUT_FILENAME = "Latency"
+IMAGE_SIZE = (320, 640)
+ITERATION = 6000
+
+transform = transforms.Compose([
+    transforms.Resize(IMAGE_SIZE),
+    transforms.ToTensor()
+])
+
+img = Image.open("image.jpg")
+img_tensor = transform(img).unsqueeze(0)
+img_tensor = img_tensor.to("cuda")
+
+model_path="/home/jiaxi/cs525/Assets/models/yolov8n.pt"
 model = YOLO(model_path)
-
-model.conf = 0.25  # Set confidence threshold (try increasing this value)
-model.iou = 0.45   # Set IoU threshold for NMS
-
-# Ensure model is on the GPU
 model.to("cuda")
 
-# Perform inference on the preloaded tensor
+# Inference
+img_tensor_list = []
+for i in range(ITERATION):
+    img_tensor_list.append(img_tensor)
 
-
-lists = []
-for i in range(100):
-    lists.append(img_tensor)
-
-for img in lists:
+latency_list = []
+for img in img_tensor_list:
     t0 = time.perf_counter()
     results = model(img)
-    # results = model("0.jpg")
     t1 = time.perf_counter()
     latency = t1 - t0
-    print("Latency: ", latency)
-    
-# t1 = time.perf_counter()
-# Process the results
-# print(results)
 
-latency = t1 - t0
-print("Latency: ", latency)
+    latency_list.append(latency)
+    print("Latency: ", latency)
+
+result = {}
+result['latency_list'] = latency_list
+
+with open(f'{OUTPUT_FILENAME}.json', 'w') as file:
+    json.dump(result, file, indent=4)
 
