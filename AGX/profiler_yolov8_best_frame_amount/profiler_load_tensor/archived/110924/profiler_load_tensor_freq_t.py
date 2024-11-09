@@ -1,15 +1,15 @@
 import json
 import time
-import torch
 from dvfs.lib import setCpu, setGpu, getCpuStatus, getGpuStatus, getEmcStatus
 from PIL import Image
+from tegrastats_lib.get_status import get_tegrastats_metrics
 from temperature.get_temperature import get_cpu_temperature, get_gpu_temperature
 from torchvision import transforms
 from ultralytics import YOLO
 
 OUTPUT_FILENAME = "Latency"
 IMAGE_SIZE = (320, 640)
-ITERATION = 1700
+ITERATION = 6000
 
 transform = transforms.Compose([
     transforms.Resize(IMAGE_SIZE),
@@ -37,16 +37,17 @@ emc_freq_list = []
 cpu_temp_list = []
 gpu_temp_list = []
 for img in img_tensor_list:
-    cpu_freq_list.append(getCpuStatus())
-    gpu_freq_list.append(getGpuStatus())
-    emc_freq_list.append(getEmcStatus())
+    metrics = get_tegrastats_metrics()
 
-    cpu_temp_list.append(get_cpu_temperature())
-    gpu_temp_list.append(get_gpu_temperature())
+    cpu_freq_list.append(metrics['cpu_freq'])
+    # gpu_freq_list.append(getGpuStatus())
+    # emc_freq_list.append(getEmcStatus())
+
+    cpu_temp_list.append(metrics['cpu_temp'])
+    gpu_temp_list.append(metrics['gpu_temp'])
 
     t0 = time.perf_counter()
     results = model(img)
-    torch.cuda.synchronize()  # Wait for all GPU tasks to finish
     t1 = time.perf_counter()
     latency = t1 - t0
 
@@ -56,8 +57,8 @@ for img in img_tensor_list:
 result = {}
 result['latency_list'] = latency_list
 result['cpu_freq_list'] = cpu_freq_list
-result['gpu_freq_list'] = gpu_freq_list
-result['emc_freq_list'] = emc_freq_list
+# result['gpu_freq_list'] = gpu_freq_list
+# result['emc_freq_list'] = emc_freq_list
 
 result['cpu_temp_list'] = cpu_temp_list
 result['gpu_temp_list'] = gpu_temp_list
