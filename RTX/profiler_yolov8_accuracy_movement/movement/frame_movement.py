@@ -260,8 +260,8 @@ def frame_movement(working_folder, interval, fps_target, categories):
         for i in range(len(sampled_frames_info[clip_name]) - 1):
             curr_path = os.path.join(working_folder, f"Label_Dup_I{interval}_F{fps_target}", sampled_frames_info[clip_name][i])
             next_path = os.path.join(working_folder, f"Label_Dup_I{interval}_F{fps_target}", sampled_frames_info[clip_name][i+1])
-            curr_path = curr_path[0 : curr_path.index('.')] + '.txt'
-            next_path = next_path[0 : next_path.index('.')] + '.txt'
+            curr_path = curr_path[0 : curr_path.rfind(".")] + '.txt'
+            next_path = next_path[0 : next_path.rfind(".")] + '.txt'
 
             movement_data[clip_name].append(calculate_movement_data(curr_path, next_path, categories))
         

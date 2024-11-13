@@ -12,7 +12,6 @@ from movement.clip_movement import clip_movement
 
 INTERVALS = [1]
 FPSS = [1, 2, 3, 5, 6, 10, 15, 30]
-IMAGE_WIDTH = 1280
 DETECT_WIDTH = 960
 CLASSES = [2]
 
@@ -54,7 +53,7 @@ if __name__ == "__main__":
         # summarize_result(working_path, accuracy_results_filename, interval, FPSS, CLASSES)
 
         # Movement Across Different FPSs
-        # for fps in FPSS:
-        #     frame_movement(working_path, interval, fps, CLASSES)
+        for fps in FPSS:
+            frame_movement(working_path, interval, fps, CLASSES)
         movement_results_filename = f"{base_name}_Movement_Result.json"
         clip_movement(working_path, movement_results_filename, interval, FPSS, CLASSES)
