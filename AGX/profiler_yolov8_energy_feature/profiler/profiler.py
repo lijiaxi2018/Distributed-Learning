@@ -11,7 +11,7 @@ import power.AGXPowerLogger as APL
 from dvfs.lib import setCpu, setGpu, getCpuStatus, getGpuStatus, getEmcStatus
 
 CONFIG_NAME = "YOLOv8-1800-640"
-ITERATION = 5
+ITERATION = 1
 CPU_CONFIGS = [
     # 115200, 
     # 192000, 
