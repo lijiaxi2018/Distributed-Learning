@@ -1,0 +1,22 @@
+{
+    "speed_avg": 33.0,
+    "speed_std": 0.0,
+    "latency_avg": 56.91847395500008,
+    "latency_std": 0.0,
+    "cpu_energy_avg": 102158939.12500381,
+    "cpu_energy_std": 0.0,
+    "gpu_energy_avg": 165571765.0315857,
+    "gpu_energy_std": 0.0,
+    "emc_energy_avg": 102361629.89206314,
+    "emc_energy_std": 0.0,
+    "cpu_power_avg": 1.7948292008983056,
+    "cpu_power_std": 0.0,
+    "gpu_power_avg": 2.908928394012939,
+    "gpu_power_std": 0.0,
+    "emc_power_avg": 1.7983902726027152,
+    "emc_power_std": 0.0,
+    "frame_rate_avg": 10.541392948699956,
+    "frame_rate_std": 0.0,
+    "total_power_avg": 6.50214786751396,
+    "total_power_std": 0.0
+}

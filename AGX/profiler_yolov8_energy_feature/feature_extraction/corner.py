@@ -2,43 +2,104 @@ import cv2
 import os
 import numpy as np
 
-def detect_corners_in_directory(directory_path, output_dir):
-    # # Create the output directory if it doesn't exist
-    # if not os.path.exists(output_dir):
-    #     os.makedirs(output_dir)
-    
-    # Iterate over all the files in the directory
-    for filename in sorted(os.listdir(directory_path)):
-        file_path = os.path.join(directory_path, filename)
-        print(f"Processing {filename}")
+def compute_corner_difference(image1, image2):
+    """
+    Computes the corner difference between two images using Harris Corner Detection.
+
+    Parameters:
+        image1 (numpy.ndarray): The first input image.
+        image2 (numpy.ndarray): The second input image.
+
+    Returns:
+        float: Normalized corner difference (a measure of how different the corners are).
+    """
+    def detect_corners(image):
+        """
+        Detect corners in an image using Harris Corner Detection.
+
+        Parameters:
+            image (numpy.ndarray): The input image.
+
+        Returns:
+            numpy.ndarray: A binary mask indicating corner locations.
+        """
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
         
-        # Check if the file is an image
-        if filename.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
-            # Read the image
-            image = cv2.imread(file_path)
-            
-            if image is None:
-                print(f"Unable to read image: {filename}")
-                continue
+        # Convert to float32 for Harris Corner Detection
+        gray = np.float32(gray)
+        
+        # Apply Harris Corner Detection
+        dst = cv2.cornerHarris(gray, blockSize=2, ksize=3, k=0.04)
+        
+        # Dilate the result for better visibility of corners
+        dst = cv2.dilate(dst, None)
+        
+        # Threshold to create a binary corner mask
+        corner_mask = dst > 0.01 * dst.max()
+        return corner_mask
 
-            # Convert the image to grayscale
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Ensure both images have the same size
+    if image1.shape[:2] != image2.shape[:2]:
+        raise ValueError("Input images must have the same dimensions.")
+    
+    # Detect corners in both images
+    corners1 = detect_corners(image1)
+    corners2 = detect_corners(image2)
+    
+    # Compute the absolute difference between the two corner masks
+    corner_diff = np.abs(corners1.astype(np.float32) - corners2.astype(np.float32))
+    
+    # Compute the normalized difference
+    total_pixels = image1.shape[0] * image1.shape[1]
+    normalized_difference = np.sum(corner_diff) / total_pixels
+    
+    return normalized_difference
 
-            # Convert to float32 for the cornerHarris function
-            gray = np.float32(gray)
-            
-            # Detect corners using Harris Corner Detection
-            dst = cv2.cornerHarris(gray, blockSize=2, ksize=3, k=0.04)
-            
-            # Dilate the corner points to enhance the features
-            dst = cv2.dilate(dst, None)
+def process_corner_differences(folder_path):
+    """
+    Calculate the corner differences for all neighboring images in a folder.
 
-            # Threshold to mark the corners in the original image
-            image[dst > 0.01 * dst.max()] = [0, 0, 255]  # Mark corners in red
+    Parameters:
+        folder_path (str): Directory containing image files.
 
-            # # Create the output path
-            # output_file_path = os.path.join(output_dir, f"corners_{filename}")
-            
-            # # Save the result to the output directory
-            # cv2.imwrite(output_file_path, image)
-            # print(f"Processed {filename} and saved corner detection result to {output_file_path}")
+    Returns:
+        List[float]: Corner differences for consecutive image pairs.
+    """
+    # Get all image filenames in the folder, sorted alphabetically
+    image_files = sorted(
+        [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
+    )
+
+    # Ensure there are enough images to compare
+    if len(image_files) < 2:
+        raise ValueError("Not enough images in the folder to calculate corner differences.")
+
+    # Initialize the list to store corner differences
+    corner_differences = []
+
+    # Iterate over neighboring images
+    prev_image = None
+    for i, image_file in enumerate(image_files):
+        image_path = os.path.join(folder_path, image_file)
+        print(f"Processing {image_file}")
+
+        # Read the image
+        image = cv2.imread(image_path)
+
+        if image is None:
+            print(f"Unable to read image: {image_file}")
+            continue
+
+        # If there's a previous image, compute the corner difference
+        if prev_image is not None:
+            try:
+                difference = compute_corner_difference(prev_image, image)
+                corner_differences.append(difference)
+            except ValueError as e:
+                print(f"Error comparing {image_files[i-1]} and {image_file}: {e}")
+
+        # Update the previous image
+        prev_image = image
+
+    return corner_differences

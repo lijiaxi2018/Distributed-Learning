@@ -6,28 +6,9 @@ parent_dir = Path(__file__).parent.parent
 sys.path.append(str(parent_dir))
 
 import json
-import threading
 import time
 import power.AGXPowerLogger as APL
 from dvfs.lib import setCpu, setGpu, getCpuStatus, getGpuStatus, getEmcStatus
-from feature_extraction.edge import detect_edges_in_directory_v2
-from feature_extraction.corner import process_corner_differences
-from feature_extraction.pixel import calculate_ssim_for_neighbors
-from feature_extraction.area import process_frame_area_differences
-from prediction_model.rf.rf_inference import random_forest_inference
-from prediction_model.lr.lr_inference import linear_regression_inference
-from prediction_model.svm.svm_inference import svm_inference
-from prediction_model.clustering.clustering_inference import clustering_inference
-
-def feature_extract():
-    # detect_edges_in_directory_v2("/home/jiaxi/cs525/Assets/600_1K")
-    # calculate_ssim_for_neighbors("/home/jiaxi/cs525/Assets/600_1K", (640, 640))
-    # process_frame_area_differences("/home/jiaxi/cs525/Assets/600_1K")
-    process_corner_differences("/home/jiaxi/cs525/Assets/600_1K")
-    # random_forest_inference(600)
-    # linear_regression_inference(600)
-    # svm_inference(600)
-    # clustering_inference(600)
 
 CONFIG_NAME = "YOLOv8-1800-640"
 ITERATION = 1
@@ -85,12 +66,7 @@ if __name__ == "__main__":
         logger.start()
         t0 = time.perf_counter()
 
-        thread = threading.Thread(target=feature_extract)
-        thread.start()
-
-        detect_yolov8(source_path="/home/jiaxi/cs525/Assets/600_1K", image_width=640)
-
-        thread.join()
+        time.sleep(30)
 
         t1 = time.perf_counter()
         logger.stop()
